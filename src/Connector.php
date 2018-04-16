@@ -168,9 +168,13 @@ class Connector implements ConnectorInterface
             throw new \Exception("scheme or host or port empty");
         }
         if(empty(self::$dns[$host])){
+            $startTime = microtime(true);
             $ips = gethostbynamel($host);
+
             if($ips===false){
                 throw new \Exception("can't resolve host:{$host}");
+            }else{
+                $this->logger->info("resole host; time usage:".(round(microtime(true)-$startTime, 5)));
             }
             self::$dns[$host] = [$ips, 0];
         }

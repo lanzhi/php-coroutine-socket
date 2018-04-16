@@ -146,7 +146,7 @@ class TcpConnection implements ConnectionInterface
             }
         }
 
-        $this->logger->debug("connect successfully; host:{host}:{port}; time usage:{timeUsage}; yield times:{yield}", [
+        $this->logger->info("connect successfully; host:{host}:{port}; time usage:{timeUsage}; yield times:{yield}", [
             'host'      => $this->host,
             'port'      => $this->port,
             'timeUsage' => round(microtime(true)-$startTime, 6),
@@ -175,7 +175,7 @@ class TcpConnection implements ConnectionInterface
             throw new \Exception("connection not writable now; status:{$this->status}");
         }
 
-        $this->logger->debug("request header\n".$data);
+        $this->logger->debug("request header:\n".$data);
         $startTime = microtime(true);
         $length    = strlen($data);
         $written   = 0;
@@ -212,7 +212,7 @@ class TcpConnection implements ConnectionInterface
             yield;
         }
 
-        $this->logger->debug("write successfully; time usage:{timeUsage}; yield times:{yield}; data length:{length}", [
+        $this->logger->info("write successfully; time usage:{timeUsage}; yield times:{yield}; data length:{length}", [
             'timeUsage' => round(microtime(true)-$startTime, 6),
             'yield'     => $yields,
             'length'    => strlen($data)
@@ -277,7 +277,7 @@ class TcpConnection implements ConnectionInterface
             yield;
         }
 
-        $this->logger->debug("read successfully; time usage:{timeUsage}; yield times:{yield};", [
+        $this->logger->info("read successfully; time usage:{timeUsage}; yield times:{yield};", [
             'timeUsage' => round(microtime(true)-$startTime, 6),
             'yield'     => $yields
         ]);
