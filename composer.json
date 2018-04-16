@@ -9,7 +9,7 @@
             "email": "i@lanzhi.me"
         }
     ],
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "require": {
         "php": ">=7.0",
         "psr/log": "^1.0"
