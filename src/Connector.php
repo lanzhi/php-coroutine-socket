@@ -99,7 +99,8 @@ class Connector implements ConnectorInterface
      */
     public function __construct(array $options=[], LoggerInterface $logger=null)
     {
-        $this->logger = $logger ?? new NullLogger();
+        $this->options = $options;
+        $this->logger  = $logger ?? new NullLogger();
     }
 
     /**
