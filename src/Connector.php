@@ -116,6 +116,7 @@ class Connector implements ConnectorInterface
         $connection = $this->getFromIdleQueue($name);
         if(!$connection){
             $connection = $this->buildOne($scheme, $host, $port, $options);
+            $connection->setName($name);
         }
 
         $this->addToBusyQueue($name, $connection);
