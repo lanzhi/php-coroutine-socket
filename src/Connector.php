@@ -32,9 +32,12 @@ class Connector implements ConnectorInterface
     private static $defaultPorts = [
         'http'  => 80,
         'https' => 443,
-        'redis' => 2222
+        'redis' => 6379
     ];
-
+    /**
+     * @var array
+     */
+    private $options;
     /**
      * @var LoggerInterface
      */
@@ -54,15 +57,24 @@ class Connector implements ConnectorInterface
      */
     public static function parseUri(string $uri)
     {
+        $schemeMap = [
+            'http'  => 'tcp',
+            'redis' => 'tcp'
+        ];
         $parts = parse_url($uri);
         $scheme = $parts['scheme'] ?? '';
         $host   = $parts['host']   ?? '';
         $port   = $parts['port']   ?? 0;
 
+        if(empty($parts['scheme'])){
+            throw new \Exception("scheme can't be empty! uri:{$uri}");
+        }
+
         if(empty($port) && isset(self::$defaultPorts[$scheme])){
             $port = self::$defaultPorts[$scheme];
         }
 
+        $scheme = isset($schemeMap[$scheme]) ? $schemeMap[$scheme] : $scheme;
         return [$scheme, $host, $port];
     }
 
@@ -70,7 +82,22 @@ class Connector implements ConnectorInterface
      * Connector constructor.
      * @param LoggerInterface|null $logger
      */
-    public function __construct(LoggerInterface $logger=null)
+    /**
+     * Connector constructor.
+     * @param array $options
+     * ```php
+     * [
+     *     'timeout' => [
+     *         'connect' => 3,
+     *         'write'   => 10,
+     *         'read'    => 10
+     *     ]
+     * ]
+     *
+     * ```
+     * @param LoggerInterface|null $logger
+     */
+    public function __construct(array $options=[], LoggerInterface $logger=null)
     {
         $this->logger = $logger ?? new NullLogger();
     }
@@ -124,6 +151,15 @@ class Connector implements ConnectorInterface
         }
     }
 
+    /**
+     * 创建连接
+     * @param string $scheme
+     * @param string $host
+     * @param int $port
+     * @param array $options
+     * @return ConnectionInterface
+     * @throws \Exception
+     */
     private function buildOne(string $scheme, string $host, int $port, array $options=[])
     {
         if(empty($scheme) || empty($host) || empty($port)){
@@ -140,17 +176,24 @@ class Connector implements ConnectorInterface
         $ip = $this->getBalanceIp(self::$dns[$host][0], self::$dns[$host][1]);
         switch ($scheme){
             case self::SCHEME_TCP:
-                $connection = new TcpConnection($ip, $port, $options, $this->logger);
+                $connection = new TcpConnection($ip, $port, $this->options + $options, $this->logger);
                 break;
             case self::SCHEME_SSL:
             case self::SCHEME_UNIX:
             default:
-                throw new \Exception("unsupported scheme{$scheme}");
+                throw new \Exception("unsupported now; scheme: {$scheme}");
         }
 
         return $connection;
     }
 
+    /**
+     * 如果一个host对应多个IP，则轮询
+     * @param array $ips
+     * @param $counter
+     * @return mixed
+     * @throws \Exception
+     */
     private function getBalanceIp(array $ips, &$counter)
     {
         $size = count($ips);
