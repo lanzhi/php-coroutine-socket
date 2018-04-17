@@ -263,9 +263,13 @@ class TcpConnection implements ConnectionInterface
                     if($no!==SOCKET_EAGAIN && $no!==SOCKET_EINTR){
                         throw new SocketReadException($this->socket);
                     }
-                }else{
+                }elseif($chunk){
                     $buffer .= $chunk;
                     $handle->deal($buffer, $size, $isEnd, $shouldClose);
+                }elseif(SOCKET_EINTR!==socket_last_error($this->socket)){
+                    //此时对端 socket 已经关闭
+                    $this->close();
+                    break;
                 }
             }
 
@@ -293,9 +297,10 @@ class TcpConnection implements ConnectionInterface
 
     public function close():void
     {
-        if($this->status===self::STATUS_CONNECTED){
+        if($this->socket && $this->status===self::STATUS_CONNECTED){
             socket_close($this->socket);
             $this->socket = null;
+            $this->logger->info("socket closed;");
         }
         $this->status       = self::STATUS_CLOSED;
         $this->socketStatus = self::SOCKET_UNAVAILABLE;

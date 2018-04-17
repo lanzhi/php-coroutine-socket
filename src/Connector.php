@@ -134,6 +134,7 @@ class Connector implements ConnectorInterface
             throw new \Exception("unknown connection A; may be not created by this connector");
         }
 
+        $this->logger->info("recycle connection; name:{$name}");
         $miss = true;
         foreach ($this->busyConnections[$name] as $key=>$item){
             if($connection===$item){
@@ -147,6 +148,7 @@ class Connector implements ConnectorInterface
 
         if(!$connection->isAvailable()){
             unset($connection);
+            $this->logger->info("clear connection; it's unavailable, may be closed; name:{$name}");
         }else{
             //追加到空闲队列
             $this->idleConnections[$name][] = $connection;

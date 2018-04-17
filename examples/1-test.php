@@ -21,9 +21,9 @@ class ReadHandler implements \lanzhi\socket\ReadHandlerInterface
     }
 }
 
-$output = new ConsoleOutput(ConsoleOutput::VERBOSITY_DEBUG);
+$output = new ConsoleOutput(ConsoleOutput::VERBOSITY_VERY_VERBOSE);
 $logger = new ConsoleLogger($output);
-$connector = new Connector();
+$connector = new Connector([], $logger);
 
 $uri = 'tcp://127.0.0.1:50000';
 list($scheme, $host, $port) = Connector::parseUri($uri);
@@ -38,12 +38,15 @@ foreach ($connection->write($data, true) as $item){
 $response = null;
 $handler = new \lanzhi\socket\ReadHandler(function(string &$buffer, int &$size, bool &$isEnd = false, bool &$shouldClose = false)use(&$response){
     $response = $buffer;
+    echo $buffer, "\n";
     $isEnd = true;
 });
 //$handler = new ReadHandler();
 foreach ($connection->read($handler) as $item){
 
 }
+
+$connector->back($connection);
 
 var_dump($response, $data);
 assert($response==$data);
