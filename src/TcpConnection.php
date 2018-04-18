@@ -111,6 +111,7 @@ class TcpConnection implements ConnectionInterface
         if(!socket_set_nonblock($socket)){
             throw new \Exception("set non-block fail");
         }
+        $this->logger->info("socket created; ".(string)$socket);
 
         if (!socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 1)) {
             throw new \Exception('Unable to set option on socket: '. socket_strerror(socket_last_error()));
@@ -146,11 +147,12 @@ class TcpConnection implements ConnectionInterface
             }
         }
 
-        $this->logger->info("connect successfully; host:{host}:{port}; time usage:{timeUsage}; yield times:{yield}", [
+        $this->logger->info("connect successfully; host:{host}:{port}; time usage:{timeUsage}; yield times:{yield}; {socket}", [
             'host'      => $this->host,
             'port'      => $this->port,
             'timeUsage' => round(microtime(true)-$startTime, 6),
-            'yield'     => $yields
+            'yield'     => $yields,
+            'socket'    => (string)$socket
         ]);
 
         $this->socket       = $socket;
@@ -212,10 +214,11 @@ class TcpConnection implements ConnectionInterface
             yield;
         }
 
-        $this->logger->info("write successfully; time usage:{timeUsage}; yield times:{yield}; data length:{length}", [
+        $this->logger->info("write successfully; time usage:{timeUsage}; yield times:{yield}; data length:{length}; {socket}", [
             'timeUsage' => round(microtime(true)-$startTime, 6),
             'yield'     => $yields,
-            'length'    => strlen($data)
+            'length'    => strlen($data),
+            'socket'    => (string)$this->socket
         ]);
 
         //如果写结束，则变更状态
@@ -281,9 +284,10 @@ class TcpConnection implements ConnectionInterface
             yield;
         }
 
-        $this->logger->info("read successfully; time usage:{timeUsage}; yield times:{yield};", [
+        $this->logger->info("read successfully; time usage:{timeUsage}; yield times:{yield}; {socket}", [
             'timeUsage' => round(microtime(true)-$startTime, 6),
-            'yield'     => $yields
+            'yield'     => $yields,
+            'socket'    => (string)$this->socket
         ]);
 
         if($isEnd){
@@ -299,8 +303,8 @@ class TcpConnection implements ConnectionInterface
     {
         if($this->socket && $this->status===self::STATUS_CONNECTED){
             socket_close($this->socket);
+            $this->logger->info("socket closed; ".(string)$this->socket);
             $this->socket = null;
-            $this->logger->info("socket closed;");
         }
         $this->status       = self::STATUS_CLOSED;
         $this->socketStatus = self::SOCKET_UNAVAILABLE;
@@ -309,7 +313,7 @@ class TcpConnection implements ConnectionInterface
     public function __destruct()
     {
         if($this->socket){
-            socket_close($this->socket);
+            $this->close();
         }
     }
 }
