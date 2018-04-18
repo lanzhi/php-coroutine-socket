@@ -8,6 +8,7 @@
 
 namespace lanzhi\socket;
 
+use Generator;
 use lanzhi\socket\exceptions\SocketConnectException;
 use lanzhi\socket\exceptions\SocketReadException;
 use lanzhi\socket\exceptions\SocketWriteException;
@@ -42,8 +43,14 @@ class TcpConnection implements ConnectionInterface
      * @var string
      */
     private $status;
-
+    /**
+     * @var string
+     */
     private $socketStatus;
+    /**
+     * @var int
+     */
+    private $lastActiveTime;
 
     /**
      * Connection constructor.
@@ -63,6 +70,12 @@ class TcpConnection implements ConnectionInterface
 
         $this->status       = self::STATUS_NOT_READY;
         $this->socketStatus = self::SOCKET_UNAVAILABLE;
+        $this->active();
+    }
+
+    private function active()
+    {
+        $this->lastActiveTime = time();
     }
 
     public function setName(string $name): void
@@ -91,6 +104,11 @@ class TcpConnection implements ConnectionInterface
     public function isAvailable(): bool
     {
         return $this->status===self::STATUS_CONNECTED;
+    }
+
+    public function getLastActiveTime(): int
+    {
+        return $this->lastActiveTime;
     }
 
     /**
@@ -158,6 +176,7 @@ class TcpConnection implements ConnectionInterface
         $this->socket       = $socket;
         $this->status       = self::STATUS_CONNECTED;
         $this->socketStatus = self::SOCKET_WRITABLE;
+        $this->active();
     }
 
     /**
@@ -225,6 +244,21 @@ class TcpConnection implements ConnectionInterface
         if($isEnd){
             $this->socketStatus = self::SOCKET_READABLE;
         }
+        $this->active();
+    }
+
+    /**
+     * @param string|null $data
+     * @return Generator
+     */
+    public function end(string $data = null): Generator
+    {
+        if($data){
+            yield from $this->write($data, true);
+        }else{
+            $this->socketStatus = self::SOCKET_READABLE;
+        }
+        $this->active();
     }
 
     /**
@@ -297,6 +331,7 @@ class TcpConnection implements ConnectionInterface
         if($shouldClose){
             $this->close();
         }
+        $this->active();
     }
 
     public function close():void

@@ -9,11 +9,20 @@
 namespace lanzhi\socket;
 
 
+use lanzhi\coroutine\GeneralRoutine;
+use lanzhi\coroutine\Scheduler;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-class Connector implements ConnectorInterface
+class Connector
 {
+    const SCHEME_TCP    = 'tcp';
+    const SCHEME_SSL    = 'ssl';
+    const SCHEME_UNIX   = 'unix';
+
+    const GC_INTERVAL   = 60;
+    const MAX_IDLE_TIME = 60;
+
     /**
      * @var array
      * ```php
@@ -35,9 +44,14 @@ class Connector implements ConnectorInterface
         'redis' => 6379
     ];
     /**
+     * @var self
+     */
+    private static $instance;
+
+    /**
      * @var array
      */
-    private $options;
+    private $options = [];
     /**
      * @var LoggerInterface
      */
@@ -49,7 +63,11 @@ class Connector implements ConnectorInterface
     /**
      * @var array
      */
-    private $idleConnections;
+    private $idleConnections = [];
+    /**
+     * @var int
+     */
+    private $lastGcTime = 0;
 
     /**
      * @param $uri
@@ -79,9 +97,16 @@ class Connector implements ConnectorInterface
     }
 
     /**
-     * Connector constructor.
-     * @param LoggerInterface|null $logger
+     * @return self
      */
+    public static function getInstance(): self
+    {
+        if(!self::$instance){
+            self::$instance = new static();
+        }
+        return self::$instance;
+    }
+
     /**
      * Connector constructor.
      * @param array $options
@@ -97,10 +122,34 @@ class Connector implements ConnectorInterface
      * ```
      * @param LoggerInterface|null $logger
      */
-    public function __construct(array $options=[], LoggerInterface $logger=null)
+    protected function __construct()
+    {
+        $this->logger  = new NullLogger();
+    }
+
+    /**
+     * @param array $options
+     * ```php
+     * [
+     *     'timeout' => [
+     *         'connect' => 3,
+     *         'write'   => 10,
+     *         'read'    => 10
+     *     ]
+     * ]
+     * ```
+     * @return $this
+     */
+    public function setOptions(array $options)
     {
         $this->options = $options;
-        $this->logger  = $logger ?? new NullLogger();
+        return $this;
+    }
+
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+        return $this;
     }
 
     /**
@@ -124,6 +173,7 @@ class Connector implements ConnectorInterface
     }
 
     /**
+     * 归还连接，如果此时连接已经关闭，则销毁变量，否则追加到空闲连接队列
      * @param ConnectionInterface $connection
      * @throws \Exception
      */
@@ -152,6 +202,8 @@ class Connector implements ConnectorInterface
         }else{
             //追加到空闲队列
             $this->idleConnections[$name][] = $connection;
+            //仅当有空闲连接的时候才需要执行连接的垃圾回收机制
+            $this->registerGcToScheduler();
         }
     }
 
@@ -235,5 +287,44 @@ class Connector implements ConnectorInterface
         }else{
             $this->busyConnections[$name][] = $connection;
         }
+    }
+
+    private $registered = false;
+    private function registerGcToScheduler()
+    {
+        if($this->registered){
+            return ;
+        }else{
+            Scheduler::getInstance()->register(new GeneralRoutine($this->gc(), 'connector-gc'));
+        }
+    }
+
+    private function gc():\Generator
+    {
+        /**
+         * @var ConnectionInterface $connection
+         */
+        while (true){
+            //当空闲连接为空时，就没有必要再执行 GC
+            if(empty($this->idleConnections)){
+                $this->registered = false;
+                break;
+            }
+            if(time()-$this->lastGcTime > self::GC_INTERVAL){
+                foreach ($this->idleConnections as $name=>$connections){
+                    foreach ($connections as $key=>$connection){
+                        if(time() - $connection->getLastActiveTime() >= self::MAX_IDLE_TIME){
+                            $connection->close();
+                            unset($this->idleConnections[$name][$key]);
+                        }
+                    }
+                }
+                $this->lastGcTime = time();
+            }
+
+            usleep(10000);
+            yield;
+        }
+
     }
 }

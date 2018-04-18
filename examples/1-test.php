@@ -11,6 +11,8 @@ include __DIR__ . "/../vendor/autoload.php";
 use lanzhi\socket\Connector;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Logger\ConsoleLogger;
+use lanzhi\coroutine\Scheduler;
+use lanzhi\coroutine\GeneralRoutine;
 
 class ReadHandler implements \lanzhi\socket\ReadHandlerInterface
 {
@@ -21,9 +23,11 @@ class ReadHandler implements \lanzhi\socket\ReadHandlerInterface
     }
 }
 
-$output = new ConsoleOutput(ConsoleOutput::VERBOSITY_VERY_VERBOSE);
+$output = new ConsoleOutput(ConsoleOutput::VERBOSITY_DEBUG);
 $logger = new ConsoleLogger($output);
-$connector = new Connector([], $logger);
+$scheduler = Scheduler::getInstance()->setLogger($logger);
+
+$connector = Connector::getInstance()->setLogger($logger);
 
 $uri = 'tcp://127.0.0.1:50000';
 list($scheme, $host, $port) = Connector::parseUri($uri);
@@ -31,9 +35,8 @@ list($scheme, $host, $port) = Connector::parseUri($uri);
 $connection = $connector->get($scheme, $host, $port);
 
 $data = "hello, world";
-foreach ($connection->write($data, true) as $item){
 
-}
+$scheduler->buildRoutineUnit($connection->write($data, true))->run();
 
 $response = null;
 $handler = new \lanzhi\socket\ReadHandler(function(string &$buffer, int &$size, bool &$isEnd = false, bool &$shouldClose = false)use(&$response){
@@ -41,10 +44,7 @@ $handler = new \lanzhi\socket\ReadHandler(function(string &$buffer, int &$size, 
     echo $buffer, "\n";
     $isEnd = true;
 });
-//$handler = new ReadHandler();
-foreach ($connection->read($handler) as $item){
-
-}
+$scheduler->buildRoutineUnit($connection->read($handler))->run();
 
 $connector->back($connection);
 

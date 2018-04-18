@@ -36,6 +36,13 @@ interface ConnectionInterface
     public function write(string $data, bool $isEnd=false):Generator;
 
     /**
+     * 调用该方法之后，说明写入结束，连接状态变更为读模式
+     * @param string|null $data
+     * @return Generator
+     */
+    public function end(string $data=null):Generator;
+
+    /**
      * 通过连接读取数据，何时读取完毕以及之后是否应该关闭连接由handler控制
      * 注意：必须告诉连接何时读取完毕，否则该生成器将会一致处于valid状态，导致连接将一直不可写
      * @param ReadHandlerInterface $handler
@@ -71,4 +78,10 @@ interface ConnectionInterface
      * @return bool
      */
     public function isAvailable():bool;
+
+    /**
+     * 返回最近一次使用的时间戳
+     * @return int
+     */
+    public function getLastActiveTime():int;
 }

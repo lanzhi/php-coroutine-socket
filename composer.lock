@@ -4,9 +4,97 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "c6326281272b922b29d52278d64f2923",
-    "content-hash": "8eb0803cd666c1b74ba6250e7082b0f6",
+    "hash": "8af7e289a66a1eba3a066c9fd23af982",
+    "content-hash": "35472eceab5f7ff94cabd7845c4bea29",
     "packages": [
+        {
+            "name": "lanzhi/php-coroutine",
+            "version": "v0.0.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/lanzhi/php-coroutine.git",
+                "reference": "7e597cd5b500d5fe7c602bd5145d05ae29cc4fa0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://files.phpcomposer.com/files/lanzhi/php-coroutine/7e597cd5b500d5fe7c602bd5145d05ae29cc4fa0.zip",
+                "reference": "7e597cd5b500d5fe7c602bd5145d05ae29cc4fa0",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0",
+                "php-ds/php-ds": "^1.2",
+                "psr/log": "^1.0"
+            },
+            "require-dev": {
+                "symfony/console": "^4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "lanzhi\\coroutine\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "蓝至",
+                    "email": "i@lanzhi.me"
+                }
+            ],
+            "description": "php coroutine",
+            "time": "2018-04-18 18:36:17"
+        },
+        {
+            "name": "php-ds/php-ds",
+            "version": "v1.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-ds/polyfill.git",
+                "reference": "27bed3897f9c801604f5bdcb65b71eb61ec80099"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://files.phpcomposer.com/files/php-ds/polyfill/27bed3897f9c801604f5bdcb65b71eb61ec80099.zip",
+                "reference": "27bed3897f9c801604f5bdcb65b71eb61ec80099",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0.0"
+            },
+            "require-dev": {
+                "php-ds/tests": "^1.2"
+            },
+            "suggest": {
+                "ext-ds": "to improve performance and reduce memory usage"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Ds\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Rudi Theunissen",
+                    "email": "rudolf.theunissen@gmail.com"
+                }
+            ],
+            "keywords": [
+                "data structures",
+                "ds",
+                "php",
+                "polyfill"
+            ],
+            "time": "2017-08-03 02:03:34"
+        },
         {
             "name": "psr/log",
             "version": "1.0.2",
