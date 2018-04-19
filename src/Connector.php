@@ -9,7 +9,6 @@
 namespace lanzhi\socket;
 
 
-use lanzhi\coroutine\GeneralRoutine;
 use lanzhi\coroutine\Scheduler;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -70,8 +69,9 @@ class Connector
     private $lastGcTime = 0;
 
     /**
-     * @param $uri
-     * @return [scheme, host, port]
+     * @param string $uri
+     * @return array [scheme, host, port]
+     * @throws \Exception
      */
     public static function parseUri(string $uri)
     {
@@ -107,21 +107,28 @@ class Connector
         return self::$instance;
     }
 
+    private $isGcEnabled = true;
     /**
-     * Connector constructor.
-     * @param array $options
-     * ```php
-     * [
-     *     'timeout' => [
-     *         'connect' => 3,
-     *         'write'   => 10,
-     *         'read'    => 10
-     *     ]
-     * ]
-     *
-     * ```
-     * @param LoggerInterface|null $logger
+     * 打开连接器的垃圾回收
      */
+    public function enableGc()
+    {
+        $this->isGcEnabled = true;
+        $this->registerGcToScheduler();
+        $this->logger->info("connector gc enabled");
+        return $this;
+    }
+
+    /**
+     * 关闭连接器的垃圾回收机制
+     */
+    public function disableGc()
+    {
+        $this->isGcEnabled = false;
+        $this->logger->info("connector gc disabled");
+        return $this;
+    }
+    
     protected function __construct()
     {
         $this->logger  = new NullLogger();
@@ -292,11 +299,16 @@ class Connector
     private $registered = false;
     private function registerGcToScheduler()
     {
-        if($this->registered){
+        //禁用 GC 或者已经注册过，则直接返回
+        if(!$this->isGcEnabled || $this->registered){
             return ;
-        }else{
-            Scheduler::getInstance()->register(new GeneralRoutine($this->gc(), 'connector-gc'));
         }
+
+        $scheduler = Scheduler::getInstance();
+        $routine = $scheduler->buildRoutine($this->gc())->setName('connector-gc');
+
+        $scheduler->register($routine);
+        $this->registered = true;
     }
 
     private function gc():\Generator
@@ -310,10 +322,22 @@ class Connector
                 $this->registered = false;
                 break;
             }
-            if(time()-$this->lastGcTime > self::GC_INTERVAL){
+
+            //当调度器内只有一个协程在运行时，说明此时除了连接器 GC 之外，其它协程都已经执行完了
+            //此时应该关闭所有连接，终止 GC，防止因 GC 原因，导致程序延迟退出
+            //需要注意的是，此时通过 getRoutineQueueSize 获取到的协程队列大小为 0，该数值为待执行协程数
+            $routineQueueSize = Scheduler::getInstance()->getRoutineQueueSize();
+            $this->logger->info("routine queue size:{$routineQueueSize}");
+            if(
+                $routineQueueSize == 0 ||
+                time()-$this->lastGcTime > self::GC_INTERVAL
+            ){
                 foreach ($this->idleConnections as $name=>$connections){
                     foreach ($connections as $key=>$connection){
-                        if(time() - $connection->getLastActiveTime() >= self::MAX_IDLE_TIME){
+                        if(
+                            $routineQueueSize == 0 ||
+                            time() - $connection->getLastActiveTime() >= self::MAX_IDLE_TIME
+                        ){
                             $connection->close();
                             unset($this->idleConnections[$name][$key]);
                         }
@@ -321,7 +345,12 @@ class Connector
                 }
                 $this->lastGcTime = time();
             }
+            if($routineQueueSize==0){
+                $this->logger->info("connector-gc will be closed; while the routine queue don't has useful routine");
+                break;
+            }
 
+            //防止当所有其它协程执行结束之后，
             usleep(10000);
             yield;
         }

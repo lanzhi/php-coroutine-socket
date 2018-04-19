@@ -22,6 +22,9 @@ $server = new Server($uri, $loop);
 $server->on('connection', function (ConnectionInterface $conn) {
     echo '[' . $conn->getRemoteAddress() . ' connected]' . PHP_EOL;
     $conn->pipe($conn);
+    $conn->on('close', function()use($conn){
+        echo '[' . $conn->getRemoteAddress() . ' closed]' . PHP_EOL;
+    });
 });
 
 $server->on('error', 'printf');

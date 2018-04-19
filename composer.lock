@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "cec6afb86c184f6d22dd38d347a0fa71",
-    "content-hash": "337873741b34a3caf60344941e5d3b4a",
+    "hash": "429cd12ccc6a675555cd6ba31116bb9a",
+    "content-hash": "5ba348b41d06494d81214bbff37f9780",
     "packages": [
         {
             "name": "lanzhi/php-coroutine",
