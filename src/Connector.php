@@ -168,7 +168,7 @@ class Connector
      */
     public function get(string $scheme, string $host, int $port, array $options=[]): ConnectionInterface
     {
-        $name = $this->buildConnectionName($scheme, $host, $port);
+        $name = self::buildConnectionName($scheme, $host, $port);
         $connection = $this->getFromIdleQueue($name);
         if(!$connection){
             $connection = $this->buildOne($scheme, $host, $port, $options);
@@ -273,7 +273,7 @@ class Connector
         return $ips[$index];
     }
 
-    private function buildConnectionName($scheme, $host, $port)
+    public static function buildConnectionName($scheme, $host, $port)
     {
         return "{$scheme}://{$host}:{$port}";
     }

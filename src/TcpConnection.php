@@ -24,6 +24,7 @@ class TcpConnection implements ConnectionInterface
     const BUFFER_SIZE     = 65536;//64k
 
     private $name;
+    private $mark;
     /**
      * @var LoggerInterface
      */
@@ -70,17 +71,15 @@ class TcpConnection implements ConnectionInterface
 
         $this->status       = self::STATUS_NOT_READY;
         $this->socketStatus = self::SOCKET_UNAVAILABLE;
+
+        $this->name = Connector::buildConnectionName('tcp', $ip, $port);
+        $this->mark = self::UNMARKED;
         $this->active();
     }
 
     private function active()
     {
         $this->lastActiveTime = time();
-    }
-
-    public function setName(string $name): void
-    {
-        $this->name = $name;
     }
 
     public function getName(): string
@@ -109,6 +108,17 @@ class TcpConnection implements ConnectionInterface
     public function getLastActiveTime(): int
     {
         return $this->lastActiveTime;
+    }
+
+    public function setMark(string $mark): ConnectionInterface
+    {
+        $this->mark = $mark;
+        return $this;
+    }
+
+    public function getMark(string $mark): string
+    {
+        return $this->mark;
     }
 
     /**

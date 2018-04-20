@@ -21,11 +21,7 @@ interface ConnectionInterface
     const SOCKET_WRITABLE    = 'writable';
     const SOCKET_READABLE    = 'readable';
 
-    /**
-     * 连接名称，同一名称可对应多个连接
-     * @param string $name
-     */
-    public function setName(string $name):void;
+    const UNMARKED = '';
 
     /**
      * 通过连接写入数据，isEnd表示是否还有剩余数据写入
@@ -56,7 +52,7 @@ interface ConnectionInterface
     public function close():void;
 
     /**
-     * 获取连接名称
+     * 获取连接名称，同一名称可对应多个连接
      * @return string
      */
     public function getName():string;
@@ -84,4 +80,18 @@ interface ConnectionInterface
      * @return int
      */
     public function getLastActiveTime():int;
+
+    /**
+     * 为使用者提供一种方便，对连接进行标记，如连接已认证等
+     * @param string $mark
+     * @return ConnectionInterface
+     */
+    public function setMark(string $mark):self;
+
+    /**
+     * 返回最近设置过的标记，默认为空字符串
+     * @param string $mark
+     * @return string
+     */
+    public function getMark(string $mark):string;
 }
