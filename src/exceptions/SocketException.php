@@ -20,11 +20,12 @@ class SocketException extends \Exception
      */
     public function __construct($socket, $error=null, $code = 0, \Exception $previous = null)
     {
-        socket_getsockname($socket, $host, $port);
+        socket_getsockname($socket, $localHost,  $localPort);
+        socket_getpeername($socket, $remoteHost, $remotePort);
         $error = $error ?? socket_strerror(socket_last_error($socket));
         socket_close($socket);
 
-        $message = "host:{$host}; port:{$port}; error:{$error}";
+        $message = "remote:{$remoteHost}:{$remotePort}; local:{$localHost}:{$localPort}; error:{$error}";
         parent::__construct($message, $code, $previous);
     }
 }
