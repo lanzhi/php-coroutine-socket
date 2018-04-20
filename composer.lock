@@ -4,21 +4,21 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "429cd12ccc6a675555cd6ba31116bb9a",
-    "content-hash": "5ba348b41d06494d81214bbff37f9780",
+    "hash": "d2c4f6fa107703659cf8941b84e250e7",
+    "content-hash": "b5371afa450a73b29acebb4607add6e6",
     "packages": [
         {
             "name": "lanzhi/php-coroutine",
-            "version": "v0.0.7",
+            "version": "v0.0.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/lanzhi/php-coroutine.git",
-                "reference": "6ccf26a18988d53bde6af5464ac60705714e6aa8"
+                "reference": "6393068cd3adbd330e3157102ece4b6a3a1a7865"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://files.phpcomposer.com/files/lanzhi/php-coroutine/6ccf26a18988d53bde6af5464ac60705714e6aa8.zip",
-                "reference": "6ccf26a18988d53bde6af5464ac60705714e6aa8",
+                "url": "https://files.phpcomposer.com/files/lanzhi/php-coroutine/6393068cd3adbd330e3157102ece4b6a3a1a7865.zip",
+                "reference": "6393068cd3adbd330e3157102ece4b6a3a1a7865",
                 "shasum": ""
             },
             "require": {
@@ -46,7 +46,7 @@
                 }
             ],
             "description": "php coroutine",
-            "time": "2018-04-18 18:59:17"
+            "time": "2018-04-19 07:26:54"
         },
         {
             "name": "php-ds/php-ds",
