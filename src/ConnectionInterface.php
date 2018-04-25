@@ -90,8 +90,7 @@ interface ConnectionInterface
 
     /**
      * 返回最近设置过的标记，默认为空字符串
-     * @param string $mark
      * @return string
      */
-    public function getMark(string $mark):string;
+    public function getMark():string;
 }

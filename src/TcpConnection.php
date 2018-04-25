@@ -116,7 +116,7 @@ class TcpConnection implements ConnectionInterface
         return $this;
     }
 
-    public function getMark(string $mark): string
+    public function getMark(): string
     {
         return $this->mark;
     }
