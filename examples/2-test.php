@@ -44,8 +44,8 @@ for($i=0; $i<5; $i++){
     $handler = new ReadHandler();
     $conn = $connector->get($scheme, $host, $port);
     $routine = new \lanzhi\coroutine\FlexibleRoutine();
-    $routine->add(Scheduler::buildRoutineUnit($conn->write($data, true)));
-    $routine->add(Scheduler::buildRoutineUnit($conn->read($handler)));
+    $routine->append(Scheduler::buildRoutineUnit($conn->write($data, true)));
+    $routine->append(Scheduler::buildRoutineUnit($conn->read($handler)));
 
     $generator = function () use($conn, $connector, $handler){
         yield;
@@ -53,7 +53,7 @@ for($i=0; $i<5; $i++){
         $connector->back($conn);
         echo "response: ", $handler->getResponse(), "\n";
     };
-    $routine->add(Scheduler::buildRoutineUnit($generator()));
+    $routine->append(Scheduler::buildRoutineUnit($generator()));
 
     $scheduler->register($routine);
 

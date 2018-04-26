@@ -21,7 +21,7 @@ interface ConnectionInterface
     const SOCKET_WRITABLE    = 'writable';
     const SOCKET_READABLE    = 'readable';
 
-    const UNMARKED = '';
+    const UNMARKED = null;
 
     /**
      * 通过连接写入数据，isEnd表示是否还有剩余数据写入
@@ -51,6 +51,16 @@ interface ConnectionInterface
      */
     public function close():void;
 
+    /**
+     * @return string
+     */
+    public function getId():string;
+
+    /**
+     * @param string $name
+     * @return ConnectionInterface
+     */
+    public function setName(string $name):self;
     /**
      * 获取连接名称，同一名称可对应多个连接
      * @return string

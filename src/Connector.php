@@ -175,7 +175,7 @@ class Connector
             $connection->setName($name);
         }
 
-        $this->addToBusyQueue($name, $connection);
+        $this->addToBusyQueue($connection);
         return $connection;
     }
 
@@ -186,29 +186,21 @@ class Connector
      */
     public function back(ConnectionInterface $connection): void
     {
+        $id   = $connection->getId();
         $name = $connection->getName();
-        if(empty($this->busyConnections[$name])){
-            throw new \Exception("unknown connection A; may be not created by this connector");
+        if(empty($this->busyConnections[$name][$id])){
+            throw new \Exception("unknown connection; may be not created by this connector; name:{$name}; id:{$id}");
         }
 
-        $this->logger->info("recycle connection; name:{$name}");
-        $miss = true;
-        foreach ($this->busyConnections[$name] as $key=>$item){
-            if($connection===$item){
-                unset($this->busyConnections[$name][$key]);
-                $miss = false;
-            }
-        }
-        if($miss){
-            throw new \Exception("unknown connection B; may be not created by this connector");
-        }
+        $this->logger->info("recycle connection; name:{$name}; id:{$id}");
+        unset($this->busyConnections[$name][$id]);
 
         if(!$connection->isAvailable()){
             unset($connection);
             $this->logger->info("clear connection; it's unavailable, may be closed; name:{$name}");
         }else{
             //追加到空闲队列
-            $this->idleConnections[$name][] = $connection;
+            $this->idleConnections[$name][$id] = $connection;
             //仅当有空闲连接的时候才需要执行连接的垃圾回收机制
             $this->registerGcToScheduler();
         }
@@ -287,12 +279,14 @@ class Connector
         return array_pop($this->idleConnections[$name]);
     }
 
-    private function addToBusyQueue(string $name, ConnectionInterface $connection)
+    private function addToBusyQueue(ConnectionInterface $connection)
     {
+        $id   = $connection->getId();
+        $name = $connection->getName();
         if(empty($this->busyConnections[$name])){
-            $this->busyConnections[$name] = [$connection];
+            $this->busyConnections[$name] = [$id => $connection];
         }else{
-            $this->busyConnections[$name][] = $connection;
+            $this->busyConnections[$name][$id] = $connection;
         }
     }
 
